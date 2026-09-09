@@ -1,0 +1,65 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+/* stylelint-disable-next-line at-rule-no-unknown */
+/* stylelint-disable-next-line at-rule-no-unknown */
+@tailwind base;
+/* stylelint-disable-next-line at-rule-no-unknown */
+@tailwind components;
+/* stylelint-disable-next-line at-rule-no-unknown */
+@tailwind utilities;
+
+:root {
+
+  --primary:#2563EB;
+  --secondary:#0EA5E9;
+
+  --background:#F4F7FB;
+
+  --card:#FFFFFF;
+
+  --border:#E5E7EB;
+
+  --text:#111827;
+
+  --muted:#6B7280;
+
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+html,
+body,
+#root{
+
+  width:100%;
+  height:100%;
+
+}
+
+body{
+
+  font-family:"Inter",sans-serif;
+
+  background:var(--background);
+
+  color:var(--text);
+
+}
+
+::-webkit-scrollbar{
+
+  width:8px;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+  background:#CBD5E1;
+
+  border-radius:20px;
+
+}

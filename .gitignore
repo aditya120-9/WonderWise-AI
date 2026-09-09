@@ -1,0 +1,35 @@
+# Python
+**/.venv/
+**/venv/
+
+__pycache__/
+
+*.pyc
+
+# Node
+
+**/node_modules/
+
+dist/
+
+# Local vector database
+
+**/chroma/
+
+# Env
+
+.env
+
+# Database
+
+*.db
+
+# IDE
+
+.vscode/
+
+.idea/
+
+# OS
+
+.DS_Store
