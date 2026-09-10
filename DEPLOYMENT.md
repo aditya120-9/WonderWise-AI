@@ -31,4 +31,4 @@ The API is available at `http://localhost:8000`; health checks are at `/health`,
 
 ## CI
 
-GitHub Actions runs backend tests and compilation, frontend lint/build, and Docker image builds on pushes and pull requests.
+GitHub Actions runs backend compilation, frontend lint/build, and Docker image builds on pushes and pull requests.

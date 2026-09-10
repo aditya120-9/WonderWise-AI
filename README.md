@@ -78,7 +78,7 @@ python -m venv .venv
 .venv\Scripts\activate  # Windows
 
 # Install dependencies
-pip install -r requirements.txt -r requirements-phase2.txt -r requirements-dev.txt
+pip install -r requirements.txt -r requirements-phase2.txt
 ```
 
 ### Step 3: Download the LLM Model

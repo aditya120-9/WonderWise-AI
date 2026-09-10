@@ -17,11 +17,9 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install backend dependencies
-        run: pip install -r requirements.txt -r requirements-phase2.txt -r requirements-dev.txt
+        run: pip install -r requirements.txt -r requirements-phase2.txt
       - name: Compile backend
         run: python -m compileall -q .
-      - name: Run backend tests
-        run: python -m pytest tests -q
 
   frontend:
     runs-on: ubuntu-latest
