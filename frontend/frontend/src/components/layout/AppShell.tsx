@@ -5,12 +5,15 @@ import ModelStatusHeader from "./ModelStatusHeader";
 interface Props {
   children: ReactNode;
   onNewChat: () => void;
+  onSelectConversation: (conversationId: number) => void;
+  onLogout: () => void;
+  userEmail: string;
 }
 
-export default function AppShell({ children, onNewChat }: Props) {
+export default function AppShell({ children, onNewChat, onSelectConversation, onLogout, userEmail }: Props) {
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar onNewChat={onNewChat} />
+      <Sidebar onNewChat={onNewChat} onSelectConversation={onSelectConversation} onLogout={onLogout} userEmail={userEmail} />
 
       <div className="flex min-w-0 flex-1 flex-col pl-[280px]">
         <ModelStatusHeader />

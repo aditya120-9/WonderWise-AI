@@ -1,19 +1,20 @@
 ﻿import { ChatSocket } from "./websocket";
+import type { WebSocketResponse } from "./websocket";
 
 const socket = new ChatSocket();
-const conversationId = Date.now() + Math.floor(Math.random() * 1000);
 
 export function connectChat(
-  onMessage: (data: any) => void,
-  onClose?: () => void // <-- FIX: Add onClose as an optional parameter here
+  onMessage: (data: WebSocketResponse) => void,
+  onClose?: () => void
 ) {
   socket.connect(
+    `${(import.meta.env.VITE_WS_URL ?? "ws://127.0.0.1:8000/ws/chat")}?token=${encodeURIComponent(localStorage.getItem("wonderwise_token") ?? "")}`,
     onMessage,
     onClose
   );
 }
 
-export function sendMessage(message: string, requestId?: string) {
+export function sendMessage(message: string, conversationId: number, requestId?: string) {
   const payload = JSON.stringify({
     message,
     conversation_id: conversationId,
@@ -25,4 +26,8 @@ export function sendMessage(message: string, requestId?: string) {
 
 export function disconnectChat() {
   socket.disconnect();
+}
+
+export function stopChat() {
+  socket.cancel();
 }

@@ -7,6 +7,15 @@ interface Props {
   onStartChat: (prompt?: string) => void;
 }
 
+const planningPrompts = [
+  ["Plan a trip", "Help me plan a trip with flights, hotels, and activities."],
+  ["Travel itinerary", "Create a travel itinerary for a 5-day visit."],
+  ["Book hotels", "Find the best hotel options in a popular destination."],
+  ["Bali getaway", "Tell me about Bali travel options."],
+  ["Weekend trip ideas", "Give me ideas for a weekend trip."],
+  ["Budget planner", "Help me plan a budget travel experience."],
+] as const;
+
 export default function DashboardPage({ onStartChat }: Props) {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
@@ -28,27 +37,11 @@ export default function DashboardPage({ onStartChat }: Props) {
             </div>
 
             <div className="mt-7 space-y-3">
-              <button
-                type="button"
-                onClick={() => onStartChat("Help me plan a trip with flights, hotels, and activities.")}
-                className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 text-left text-sm font-semibold text-slate-900 transition hover:border-blue-500"
-              >
-                Plan a trip
-              </button>
-              <button
-                type="button"
-                onClick={() => onStartChat("Create a travel itinerary for a 5-day visit.")}
-                className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 text-left text-sm font-semibold text-slate-900 transition hover:border-blue-500"
-              >
-                Travel itinerary
-              </button>
-              <button
-                type="button"
-                onClick={() => onStartChat("Find the best hotel options in a popular destination.")}
-                className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 text-left text-sm font-semibold text-slate-900 transition hover:border-blue-500"
-              >
-                Book hotels
-              </button>
+              {planningPrompts.slice(0, 3).map(([label, prompt]) => (
+                <button key={label} type="button" onClick={() => onStartChat(prompt)} className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 text-left text-sm font-semibold text-slate-900 transition hover:border-blue-500">
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -62,27 +55,11 @@ export default function DashboardPage({ onStartChat }: Props) {
             </div>
 
             <div className="mt-5 space-y-3">
-              <button
-                type="button"
-                onClick={() => onStartChat("Tell me about Bali travel options.")}
-                className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 text-left text-sm text-slate-700 transition hover:border-slate-300"
-              >
-                Bali getaway
-              </button>
-              <button
-                type="button"
-                onClick={() => onStartChat("Give me ideas for a weekend trip.")}
-                className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 text-left text-sm text-slate-700 transition hover:border-slate-300"
-              >
-                Weekend trip ideas
-              </button>
-              <button
-                type="button"
-                onClick={() => onStartChat("Help me plan a budget travel experience.")}
-                className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 text-left text-sm text-slate-700 transition hover:border-slate-300"
-              >
-                Budget planner
-              </button>
+              {planningPrompts.slice(3).map(([label, prompt]) => (
+                <button key={label} type="button" onClick={() => onStartChat(prompt)} className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 text-left text-sm text-slate-700 transition hover:border-slate-300">
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 

@@ -7,7 +7,7 @@ A modern, **locally-hosted** AI-powered travel assistant that provides personali
 ## 🎯 Overview
 
 WonderWise AI is a full-stack travel planning application that leverages a local language model (qwen2.5:3b) to deliver:
-- **Smart Travel Itineraries** — Multi-day trip planning with real local prices
+- **Smart Travel Itineraries** — Multi-day trip planning with source-backed pricing when verified data is available
 - **Budget-Aware Recommendations** — Stays within user-specified budgets
 - **Real-Time Streaming** — Live response generation via WebSocket
 - **Conversation Memory** — Context-aware recommendations across sessions
@@ -22,7 +22,7 @@ WonderWise AI is a full-stack travel planning application that leverages a local
 |---------|-------------|
 | 🤖 **Local LLM** | Runs qwen2.5:3b via Ollama—no cloud API costs, full privacy |
 | 💬 **WebSocket Streaming** | Real-time response streaming for fast user feedback |
-| 📍 **Budget Enforcement** | AI respects exact budget limits (e.g., INR 5000 for 2 nights) |
+| 📍 **Budget Guidance** | AI checks arithmetic and labels prices as verified, estimated, or unverified |
 | 🗣️ **Conversation Memory** | SQLite-based history for multi-turn context |
 | 📚 **RAG System** | Retrieval-Augmented Generation with Chroma vector DB |
 | 🎨 **Responsive UI** | React + TypeScript + Tailwind CSS for mobile & desktop |
@@ -78,7 +78,7 @@ python -m venv .venv
 .venv\Scripts\activate  # Windows
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r requirements.txt -r requirements-phase2.txt -r requirements-dev.txt
 ```
 
 ### Step 3: Download the LLM Model
@@ -86,6 +86,17 @@ pip install -r requirements.txt
 ollama pull qwen2.5:3b
 ollama serve  # Keep Ollama running in a separate terminal (default: http://localhost:11434)
 ```
+
+### Travel data and price confidence
+
+The assistant does not treat model knowledge as live travel data. Add dated, trusted documents to `knowledge/` and run the ingestion command before expecting source-backed prices:
+
+```bash
+cd backend
+python -m app.rag.ingest
+```
+
+Without retrieved source documents, the assistant labels prices as **Not verified** and does not invent numeric fares. Travel prices and availability should still be confirmed with the operator or property for the user's dates.
 
 ### Step 4: Frontend Setup
 ```bash
@@ -131,9 +142,9 @@ npm run dev
    - "Top 5 places to visit in eastern India"
    - "Kerala backwater cruise itinerary for 5 days"
 3. Receive structured bullet-point responses with:
-   - 🏨 Accommodation recommendations with prices
-   - 🍽️ Food & dining suggestions
-   - 🚗 Transport options and costs
+    - 🏨 Accommodation recommendations with source-backed prices when available
+    - 🍽️ Food & dining suggestions with confidence labels
+    - 🚗 Transport options and source-backed costs when available
    - 📍 Activities and attractions
    - 💰 Budget summary
 
@@ -163,6 +174,25 @@ Response: { "type": "chunk", "content": "..." }
 GET /
 Response: { "status": "running" }
 ```
+
+#### Operations
+
+```text
+GET /health   # process liveness
+GET /ready    # database and Ollama readiness
+GET /metrics  # in-process latency and cache counters
+```
+
+#### Authentication
+
+```text
+POST /auth/register
+POST /auth/login
+GET  /conversations
+POST /conversations
+```
+
+Chat requires a bearer token and an owned conversation. Exact current fares, availability, and prices require reviewed documents in `knowledge/` or configured live provider integrations; the model will not invent them.
 
 ---
 

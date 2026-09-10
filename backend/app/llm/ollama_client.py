@@ -18,6 +18,7 @@ llm = ChatOllama(
     top_p=0.85,
     streaming=True,
     repeat_penalty=1.06,
-    num_predict=180,
+    num_predict=settings.OLLAMA_NUM_PREDICT,
+    keep_alive=settings.OLLAMA_KEEP_ALIVE,
 )
 

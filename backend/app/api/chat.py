@@ -1,37 +1,32 @@
-﻿import importlib
+﻿from fastapi import APIRouter, Depends, HTTPException, status
 
-try:
-    APIRouter = importlib.import_module("fastapi").APIRouter
-except ImportError:
-    class APIRouter:
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def post(self, *args, **kwargs):
-            def decorator(func):
-                return func
-
-            return decorator
-
-try:
-    BaseModel = importlib.import_module("pydantic").BaseModel
-except ImportError:
-    class BaseModel:
-        pass
-
+from app.auth.security import get_current_user
+from app.database.database import SessionLocal
+from app.database.models import Conversation, User
 from app.services.chat_service import chat_service
+from app.schemas.chat import ChatRequest
+from app.services.response_parser import parse_travel_response
 
 
 router = APIRouter()
 
 
-class ChatRequest(BaseModel):
-    message: str
-    conversation_id: int = 1
-
-
 @router.post("/chat")
-async def chat(data: ChatRequest):
-    response = await chat_service.chat(data.message, data.conversation_id)
+async def chat(data: ChatRequest, user: User = Depends(get_current_user)):
+    session = SessionLocal()
+    try:
+        conversation = (
+            session.query(Conversation)
+            .filter(Conversation.id == data.conversation_id, Conversation.user_id == user.id)
+            .first()
+        )
+    finally:
+        session.close()
 
-    return {"response": response}
+    if conversation is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+
+    response = await chat_service.chat(data.message, conversation.id)
+
+    structured = parse_travel_response(response)
+    return {"response": response, "structured": structured.model_dump()}

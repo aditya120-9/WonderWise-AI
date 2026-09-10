@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   connectChat,
   disconnectChat,
+  stopChat,
   sendMessage as send,
 } from "../services/chatService";
 import type { Message } from "../types/chat";
@@ -11,7 +12,7 @@ function sanitizeChunk(chunk: string) {
   return chunk.replace(/\r\n/g, "\n");
 }
 
-export function useChat() {
+export function useChat(conversationId: number | null) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -21,6 +22,8 @@ export function useChat() {
   const requestTextAccumulatorRef = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
+    if (conversationId === null) return;
+
     connectChat((data) => {
       if (data.type === "end") {
         if (!data.request_id || data.request_id === activeRequestIdRef.current) {
@@ -93,7 +96,7 @@ export function useChat() {
     return () => {
       disconnectChat();
     };
-  }, []);
+  }, [conversationId]);
 
   function sendMessage(text: string) {
     if (!text.trim()) return;
@@ -118,7 +121,7 @@ export function useChat() {
     ]);
 
     setLoading(true);
-    send(text, requestId);
+    if (conversationId !== null) send(text, conversationId, requestId);
   }
 
   function resetChat() {
@@ -129,10 +132,16 @@ export function useChat() {
     requestTextAccumulatorRef.current.clear();
   }
 
+  function stopGeneration() {
+    stopChat();
+    setLoading(false);
+  }
+
   return {
     messages,
     loading,
     sendMessage,
+    stopGeneration,
     resetChat,
   };
 }

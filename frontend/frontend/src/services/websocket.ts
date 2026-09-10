@@ -9,11 +9,18 @@ export class ChatSocket {
   private socket: WebSocket | null = null;
   private queue: string[] = [];
   private connectionToken = 0;
+  private connectionUrl = "";
+  private messageHandler: ((data: WebSocketResponse) => void) | null = null;
+  private closeHandler: (() => void) | undefined;
 
   connect(
+    url: string,
     onMessage: (data: WebSocketResponse) => void,
     onClose?: () => void
   ) {
+    this.connectionUrl = url;
+    this.messageHandler = onMessage;
+    this.closeHandler = onClose;
     // Prevent overlapping sockets during React StrictMode mount/unmount cycles.
     this.connectionToken += 1;
     const token = this.connectionToken;
@@ -25,7 +32,7 @@ export class ChatSocket {
       // ignore
     }
 
-    this.socket = new WebSocket("ws://127.0.0.1:8000/ws/chat");
+    this.socket = new WebSocket(url);
 
     this.socket.onopen = () => {
       // Only the latest active connection should flush the queue.
@@ -60,6 +67,16 @@ export class ChatSocket {
 
 
   send(message: string) {
+    const socketUnavailable = !this.socket ||
+      this.socket.readyState === WebSocket.CLOSING ||
+      this.socket.readyState === WebSocket.CLOSED;
+    if (socketUnavailable && this.connectionUrl && this.messageHandler) {
+      this.socket = null;
+      this.queue.push(message);
+      this.connect(this.connectionUrl, this.messageHandler, this.closeHandler);
+      return;
+    }
+
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(message);
       return;
@@ -84,6 +101,15 @@ export class ChatSocket {
       this.socket.onclose = null;
       this.socket.onerror = null;
     }
+    this.socket?.close();
+    this.socket = null;
+    this.connectionUrl = "";
+    this.messageHandler = null;
+    this.closeHandler = undefined;
+  }
+
+  cancel() {
+    this.connectionToken += 1;
     this.socket?.close();
     this.socket = null;
   }

@@ -1,19 +1,31 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Car, Compass, Hotel, Plane, Train, Wallet } from "lucide-react";
 import Header from "../components/layout/Header";
 import ChatWindow from "../components/chat/ChatWindow";
 import ChatInput from "../components/chat/chatInput";
 
 
 import { useChat } from "../hooks/useChat";
+import { createConversation } from "../services/conversations";
+
+const travelActions = [
+  ["Find Flights", "Best prices today", "Help me find the cheapest flights for my next trip", Plane],
+  ["Hotels", "Curated stays", "Show me hotel options with great reviews and value", Hotel],
+  ["Train Booking", "Fastest routes", "Find the best train routes and schedules for my journey", Train],
+  ["Cab Booking", "Airport & city rides", "Recommend the best cab options for airport and city travel", Car],
+  ["Explore Places", "Hidden gems", "Suggest interesting travel destinations I should explore", Compass],
+  ["Budget Planner", "Smart itineraries", "Create a budget travel plan for my next vacation", Wallet],
+] as const;
 
 interface Props {
   initialPrompt?: string;
   onBack: () => void;
+  existingConversationId?: number | null;
 }
 
-export default function ChatPage({ initialPrompt = "", onBack }: Props) {
-  const { messages, loading, sendMessage } = useChat();
+export default function ChatPage({ initialPrompt = "", onBack, existingConversationId = null }: Props) {
+  const [conversationId, setConversationId] = useState<number | null>(existingConversationId);
+  const { messages, loading, sendMessage, stopGeneration } = useChat(conversationId);
   const [inputValue, setInputValue] = useState("");
 
   useEffect(() => {
@@ -21,6 +33,19 @@ export default function ChatPage({ initialPrompt = "", onBack }: Props) {
       setInputValue(initialPrompt);
     }
   }, [initialPrompt]);
+
+  useEffect(() => {
+    if (existingConversationId !== null) return;
+    let active = true;
+    createConversation()
+      .then((conversation) => {
+        if (active) setConversationId(conversation.id);
+      })
+      .catch(() => onBack());
+    return () => {
+      active = false;
+    };
+  }, [existingConversationId, onBack]);
 
   function handleSend() {
     if (!inputValue.trim()) return;
@@ -74,55 +99,20 @@ export default function ChatPage({ initialPrompt = "", onBack }: Props) {
 
                     <div className="mt-10 w-full max-w-4xl">
                       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                        {[{
-                          title: "Find Flights",
-                          subtitle: "Best prices today",
-                          key: "Help me find the cheapest flights for my next trip",
-                          icon: "plane",
-                        },{
-                          title: "Hotels",
-                          subtitle: "Curated stays",
-                          key: "Show me hotel options with great reviews and value",
-                          icon: "hotel",
-                        },{
-                          title: "Train Booking",
-                          subtitle: "Fastest routes",
-                          key: "Find the best train routes and schedules for my journey",
-                          icon: "train",
-                        },{
-                          title: "Cab Booking",
-                          subtitle: "Airport & city rides",
-                          key: "Recommend the best cab options for airport and city travel",
-                          icon: "car",
-                        },{
-                          title: "Explore Places",
-                          subtitle: "Hidden gems",
-                          key: "Suggest interesting travel destinations I should explore",
-                          icon: "compass",
-                        },{
-                          title: "Budget Planner",
-                          subtitle: "Smart itineraries",
-                          key: "Create a budget travel plan for my next vacation",
-                          icon: "wallet",
-                        }].map((a) => (
+                        {travelActions.map(([title, subtitle, prompt, Icon]) => (
                           <button
-                            key={a.title}
+                            key={title}
                             type="button"
-                            onClick={() => setInputValue(a.key)}
+                            onClick={() => setInputValue(prompt)}
                             className="rounded-2xl border border-gray-200 bg-white p-4 text-left shadow-sm transition-all hover:shadow-md hover:scale-[1.01]"
                           >
                             <div className="flex items-center gap-4">
                               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
-                                {a.icon === "plane" ? "✈️" : null}
-                                {a.icon === "hotel" ? "🏨" : null}
-                                {a.icon === "train" ? "🚆" : null}
-                                {a.icon === "car" ? "🚗" : null}
-                                {a.icon === "compass" ? "🧭" : null}
-                                {a.icon === "wallet" ? "💳" : null}
+                                <Icon size={21} aria-hidden="true" />
                               </div>
                               <div>
-                                <div className="text-[15px] font-semibold text-slate-900">{a.title}</div>
-                                <div className="mt-1 text-sm text-slate-500">{a.subtitle}</div>
+                                <div className="text-[15px] font-semibold text-slate-900">{title}</div>
+                                <div className="mt-1 text-sm text-slate-500">{subtitle}</div>
                               </div>
                             </div>
                           </button>
@@ -150,12 +140,6 @@ export default function ChatPage({ initialPrompt = "", onBack }: Props) {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <button type="button" className="rounded-full p-2 text-slate-500 hover:bg-slate-100" disabled={loading}>
-                          📎
-                        </button>
-                        <button type="button" className="rounded-full p-2 text-slate-500 hover:bg-slate-100" disabled={loading}>
-                          🎤
-                        </button>
                         <button
                           type="button"
                           onClick={handleSend}
@@ -183,7 +167,7 @@ export default function ChatPage({ initialPrompt = "", onBack }: Props) {
             isActiveChat ? "opacity-100" : "opacity-0 pointer-events-none"
           } transition-opacity`}
         >
-          <ChatInput value={inputValue} onChange={setInputValue} onSend={handleSend} loading={loading} />
+          <ChatInput value={inputValue} onChange={setInputValue} onSend={handleSend} onStop={stopGeneration} loading={loading} />
         </div>
       </main>
     </div>

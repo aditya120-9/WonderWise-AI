@@ -2,10 +2,11 @@ interface Props {
   value: string;
   onChange: (value: string) => void;
   onSend: () => void;
+  onStop: () => void;
   loading: boolean;
 }
 
-export default function ChatInput({ value, onChange, onSend, loading }: Props) {
+export default function ChatInput({ value, onChange, onSend, onStop, loading }: Props) {
   return (
     <div className="bg-white border-t border-slate-200 px-4 py-4 shadow-sm">
       <div className="max-w-[1500px] mx-auto flex flex-col gap-3 sm:flex-row items-center">
@@ -22,11 +23,10 @@ export default function ChatInput({ value, onChange, onSend, loading }: Props) {
           disabled={loading}
         />
         <button
-          onClick={onSend}
-          disabled={loading}
+          onClick={loading ? onStop : onSend}
           className="inline-flex h-14 items-center justify-center rounded-3xl bg-blue-600 px-8 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
         >
-          {loading ? "Thinking..." : "Send"}
+          {loading ? "Stop" : "Send"}
         </button>
       </div>
     </div>

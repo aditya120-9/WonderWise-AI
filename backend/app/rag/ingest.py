@@ -1,5 +1,4 @@
 from pathlib import Path
-from pypdf import PdfReader
 from app.rag.chroma import collection, embedding_client
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -7,6 +6,14 @@ PDF_DIR = BASE_DIR / "knowledge"
 
 
 def extract_pdf_text(pdf_path: Path) -> str:
+    try:
+        from pypdf import PdfReader
+    except ModuleNotFoundError as error:
+        raise RuntimeError(
+            "PDF ingestion requires pypdf. Install backend dependencies with: "
+            "pip install -r requirements-phase2.txt"
+        ) from error
+
     reader = PdfReader(pdf_path)
     text = []
     for page in reader.pages:
@@ -25,6 +32,33 @@ def chunk_text(text: str, chunk_size: int = 800, overlap: int = 150) -> list[str
         chunks.append(chunk)
         start += chunk_size - overlap
     return chunks
+
+
+def ingest_text_documents() -> int:
+    """Index local .txt and .md files with source metadata."""
+    text_files = [
+        path
+        for path in [*PDF_DIR.glob("*.txt"), *PDF_DIR.glob("*.md")]
+        if path.name.lower() != "readme.md"
+    ]
+    total_chunks = 0
+    for source_path in text_files:
+        text = source_path.read_text(encoding="utf-8")
+        chunks = chunk_text(text)
+        if not chunks:
+            continue
+        embeddings = embedding_client.embed_documents(chunks)
+        collection.upsert(
+            documents=chunks,
+            ids=[f"{source_path.stem}-{index}" for index in range(len(chunks))],
+            metadatas=[
+                {"source": source_path.name, "source_type": "local", "chunk_index": index}
+                for index in range(len(chunks))
+            ],
+            embeddings=embeddings,
+        )
+        total_chunks += len(chunks)
+    return total_chunks
 
 
 def ingest_documents() -> None:
@@ -57,8 +91,9 @@ def ingest_documents() -> None:
             embeddings=embeddings,
         )
 
-    collection.persist()
 
 
 if __name__ == "__main__":
-    ingest_documents()
+    if list(PDF_DIR.glob("*.pdf")):
+        ingest_documents()
+    print(f"Indexed {ingest_text_documents()} text chunks.")
